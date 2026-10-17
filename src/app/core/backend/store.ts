@@ -1,54 +1,26 @@
-import { fromDate, today } from '../dates';
+import { fromDate, today } from '../dates.ts';
 import {
-  ContractedPlan,
-  CostBreakdown,
-  CostDetail,
+  type ContractedPlan,
+  type CostBreakdown,
+  type CostDetail,
   CULTURE_TYPES,
-  Farming,
-  Group,
-  Producer,
-} from '../models';
+  type Farming,
+  type Group,
+  type Producer,
+} from '../models.ts';
 
 /**
- * Base de dados em memória usada pela API mock.
+ * Estado da base de dados da API. Compartilhado pelo servidor Express (em memória)
+ * e pela API mock do navegador (persistida no localStorage).
  * Todos os nomes, documentos e valores são fictícios e gerados de forma determinística.
- * O estado é persistido no localStorage para que as alterações sobrevivam a um reload.
  */
-export interface MockState {
+export interface State {
   producers: Producer[];
   plans: ContractedPlan[];
   farmings: (Farming & { producerId: number })[];
   groups: Group[];
   groupFarmings: { groupId: number; farmingId: number }[];
   nextId: number;
-}
-
-const STORAGE_KEY = 'agro-painel:mock-db:v1';
-
-export function loadState(): MockState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as MockState;
-  } catch {
-    /* storage indisponível: segue com seed */
-  }
-  return createSeed();
-}
-
-export function saveState(state: MockState): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    /* sem persistência — a demo continua funcionando em memória */
-  }
-}
-
-export function clearState(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    /* ignore */
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -115,7 +87,7 @@ const COST_SHARES = {
 } as const;
 
 /** Gera o estado inicial. Também usado pelos testes E2E para conhecer os dados esperados. */
-export function createSeed(): MockState {
+export function createSeed(): State {
   const rand = mulberry32(20240607);
   const pick = <T>(list: readonly T[]) => list[Math.floor(rand() * list.length)];
   const between = (min: number, max: number) => min + rand() * (max - min);
@@ -127,7 +99,7 @@ export function createSeed(): MockState {
 
   const producers: Producer[] = [];
   const plans: ContractedPlan[] = [];
-  const farmings: MockState['farmings'] = [];
+  const farmings: State['farmings'] = [];
   const usedNames = new Set<string>();
 
   for (let i = 1; i <= 32; i++) {
@@ -244,7 +216,7 @@ export function createSeed(): MockState {
     combos.set(key, entry);
   }
   const groups: Group[] = [];
-  const groupFarmings: MockState['groupFarmings'] = [];
+  const groupFarmings: State['groupFarmings'] = [];
   [...combos.values()]
     .sort((a, b) => b.ids.length - a.ids.length)
     .slice(0, 5)

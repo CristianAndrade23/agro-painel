@@ -12,12 +12,15 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: Build e testes (unitários e API)
     runs-on: ubuntu-latest
+    env:
+      CYPRESS_INSTALL_BINARY: 0
     steps:
       - uses: actions/checkout@v4
 
@@ -25,24 +28,45 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
-      - run: npm ci
+      - name: Instalar dependências (frontend e backend)
+        run: npm ci
 
-      - name: Testes
+      - name: Testes unitários do frontend (Vitest)
         run: npx ng test --watch=false
 
-      - name: Build (GitHub Pages)
-        run: npx ng build --base-href "/${{ github.event.repository.name }}/"
+      - name: Checagem de tipos e testes da API (node:test)
+        run: |
+          npx tsc -p backend --noEmit
+          npm run test:api
 
-      # Fallback de SPA: o GitHub Pages serve 404.html para rotas desconhecidas.
-      - run: cp dist/agro-painel/browser/index.html dist/agro-painel/browser/404.html
+      - name: Build de produção (servido pelo backend)
+        run: npx ng build
+
+      - name: Build da demo estática (GitHub Pages)
+        run: |
+          npx ng build --configuration demo --output-path dist/pages --base-href "/${{ github.event.repository.name }}/"
+          # Fallback de SPA: o GitHub Pages serve 404.html para rotas desconhecidas.
+          cp dist/pages/browser/index.html dist/pages/browser/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/agro-painel/browser
+          path: dist/pages/browser
 
   e2e:
+    name: E2E (Cypress, modo ${{ matrix.mode }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: demo
+            script: e2e
+          - mode: servidor
+            script: e2e:server
     steps:
       - uses: actions/checkout@v4
 
@@ -50,23 +74,31 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
-      - name: Testes E2E (Cypress)
-        uses: cypress-io/github-action@v6
+      - name: Cache do binário do Cypress
+        uses: actions/cache@v4
         with:
-          start: npm start
-          wait-on: http://localhost:4200
-          wait-on-timeout: 120
-          browser: chrome
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci
+
+      - name: Testes E2E
+        run: npm run ${{ matrix.script }}
 
       - name: Screenshots das falhas
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-${{ matrix.mode }}
           path: cypress/screenshots
+          if-no-files-found: ignore
 
   deploy:
+    name: Deploy da demo (GitHub Pages)
     if: github.event_name != 'pull_request'
     needs: [build, e2e]
     runs-on: ubuntu-latest

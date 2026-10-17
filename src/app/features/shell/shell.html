@@ -44,12 +44,10 @@
         <span class="avatar">{{ (session.user()?.clientName ?? 'A').charAt(0) }}</span>
         <span>{{ session.user()?.clientName ?? 'Administrador' }}</span>
       </div>
-      @if (isMock) {
-        <button type="button" class="sidebar__link" (click)="resetDemoData()">
-          <app-icon name="refresh" />
-          Restaurar dados demo
-        </button>
-      }
+      <button type="button" class="sidebar__link" [disabled]="resetting()" (click)="resetDemoData()">
+        <app-icon name="refresh" />
+        {{ resetting() ? 'Restaurando…' : 'Restaurar dados demo' }}
+      </button>
       <button type="button" class="sidebar__link" (click)="session.logout()">
         <app-icon name="logout" />
         Sair

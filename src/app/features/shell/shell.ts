@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { apiErrorMessage } from '../../core/api/api-error';
+import { DemoApi } from '../../core/api/demo.api';
 import { SessionService } from '../../core/auth/session.service';
-import { appSettings } from '../../core/config';
-import { clearState } from '../../core/mock/mock-db';
-import { resetMockDb } from '../../core/mock/mock-api.interceptor';
 import { Icon, IconName } from '../../shared/icon';
+import { ToastService } from '../../shared/toast';
 
 interface NavItem {
   path: string;
@@ -22,9 +22,11 @@ interface NavItem {
 })
 export default class Shell {
   protected readonly session = inject(SessionService);
+  private readonly demoApi = inject(DemoApi);
+  private readonly toast = inject(ToastService);
 
-  protected readonly isMock = appSettings.useMockApi;
   protected readonly menuOpen = signal(false);
+  protected readonly resetting = signal(false);
 
   protected readonly nav: { section: string; items: NavItem[] }[] = [
     {
@@ -45,9 +47,14 @@ export default class Shell {
   ];
 
   protected resetDemoData() {
-    clearState();
-    resetMockDb();
-    // Recarrega a página para que todas as telas busquem os dados do seed novamente.
-    window.location.reload();
+    this.resetting.set(true);
+    this.demoApi.reset().subscribe({
+      // Recarrega a página para que todas as telas busquem os dados do seed novamente.
+      next: () => window.location.reload(),
+      error: (e) => {
+        this.resetting.set(false);
+        this.toast.error(apiErrorMessage(e, 'Não foi possível restaurar os dados.'));
+      },
+    });
   }
 }

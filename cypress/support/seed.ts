@@ -3,7 +3,7 @@
  * Assim os cenários não dependem de nomes "chumbados" e continuam válidos se o seed mudar.
  */
 import { daysFromToday } from '../../src/app/core/dates';
-import { createSeed } from '../../src/app/core/mock/mock-db';
+import { createSeed } from '../../src/app/core/backend/store';
 import { fullName } from '../../src/app/core/models';
 
 export const seed = createSeed();

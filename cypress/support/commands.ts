@@ -3,12 +3,18 @@
 /**
  * Comandos customizados.
  *
- * Cada teste começa com o localStorage limpo (testIsolation), então a API mock
- * recria o seed determinístico a cada teste — os cenários não dependem uns dos outros.
+ * Os testes rodam em dois modos (valor exposto `API_MODE`, via `--expose`):
+ * - `mock` (padrão): app servido pelo `ng serve`, API dentro do navegador. O localStorage limpo
+ *   a cada teste (testIsolation) já devolve o seed.
+ * - `server`: app servido pelo backend Express. Antes de cada teste a base do servidor é
+ *   restaurada via POST /demo/reset e o login usa um JWT real.
  */
 
+const API = '/api/v1';
 const DEMO_USER = { clientId: 1, clientName: 'Administrador' };
-const DEMO_TOKEN = 'Bearer demo.' + btoa(JSON.stringify(DEMO_USER));
+const MOCK_TOKEN = 'Bearer demo.' + btoa(JSON.stringify(DEMO_USER));
+
+export const isServerMode = () => Cypress.expose('API_MODE') === 'server';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -28,6 +34,17 @@ declare global {
   }
 }
 
+beforeEach(() => {
+  if (isServerMode()) cy.request('POST', `${API}/demo/reset`);
+});
+
+function storeSession(token: string, user: unknown) {
+  return (win: Window) => {
+    win.localStorage.setItem('agro-painel:token', JSON.stringify(token));
+    win.localStorage.setItem('agro-painel:user', JSON.stringify(user));
+  };
+}
+
 Cypress.Commands.add('loginViaUi', (username = 'admin', password = 'admin123') => {
   cy.visit('/login');
   cy.get('input[name=username]').type(username);
@@ -36,12 +53,17 @@ Cypress.Commands.add('loginViaUi', (username = 'admin', password = 'admin123') =
 });
 
 Cypress.Commands.add('visitAsAdmin', (path = '/painel') => {
-  cy.visit(path, {
-    onBeforeLoad(win) {
-      win.localStorage.setItem('agro-painel:token', JSON.stringify(DEMO_TOKEN));
-      win.localStorage.setItem('agro-painel:user', JSON.stringify(DEMO_USER));
-    },
-  });
+  if (!isServerMode()) {
+    cy.visit(path, { onBeforeLoad: storeSession(MOCK_TOKEN, DEMO_USER) });
+    return;
+  }
+  cy.request('POST', `${API}/authentication/signin`, { username: 'admin', password: 'admin123', adm: true })
+    .its('body.token')
+    .then((token: string) => {
+      cy.request({ url: `${API}/authentication/decrypt`, headers: { Authorization: token } })
+        .its('body')
+        .then((user) => cy.visit(path, { onBeforeLoad: storeSession(token, user) }));
+    });
 });
 
 Cypress.Commands.add('navigateTo', (label: string) => {

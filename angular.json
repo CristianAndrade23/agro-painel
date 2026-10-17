@@ -43,12 +43,44 @@
                   "maximumError": "8kB"
                 }
               ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.server.ts"
+                }
+              ]
+            },
+            "demo": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
               "outputHashing": "all"
             },
             "development": {
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "development-api": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.server.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -61,6 +93,10 @@
             },
             "development": {
               "buildTarget": "agro-painel:build:development"
+            },
+            "api": {
+              "buildTarget": "agro-painel:build:development-api",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

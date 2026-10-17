@@ -1,12 +1,13 @@
+import { environment } from '../../environments/environment';
+
 /**
  * Configuração da aplicação.
- * - apiUrl: prefixo de todas as chamadas REST.
- * - useMockApi: quando true, as requisições são atendidas pelo interceptor em memória
- *   (`core/mock/mock-api.interceptor.ts`). Basta trocar para false e apontar `apiUrl`
- *   para um backend real que implemente o mesmo contrato.
+ * - apiUrl: prefixo de todas as chamadas REST (mesma origem do app).
+ * - useMockApi: true no modo demo, em que o interceptor `core/mock/mock-api.interceptor.ts`
+ *   atende as chamadas no navegador; false quando há o backend Express (`backend/`).
  */
 export const appSettings = {
   apiUrl: '/api/v1',
-  useMockApi: true,
+  useMockApi: environment.useMockApi,
   demoCredentials: { username: 'admin', password: 'admin123' },
 } as const;
