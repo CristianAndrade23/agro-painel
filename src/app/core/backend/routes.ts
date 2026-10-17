@@ -3,7 +3,7 @@
  *
  * O mesmo código atende duas implementações:
  * - o servidor Express em `backend/` (versão completa, com JWT);
- * - o interceptor do Angular em `core/mock/` (modo demo, que roda só no navegador).
+ * - o interceptor do Angular em `core/mock/` (modo navegador, sem servidor).
  *
  * Por ser importado diretamente pelo Node (type stripping), este arquivo usa apenas
  * sintaxe TypeScript "apagável" e imports com extensão `.ts`.

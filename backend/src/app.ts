@@ -13,7 +13,7 @@ export interface AppOptions {
 
 /**
  * API do AgroPainel. As regras de negócio de `/admin/*` vêm de `src/app/core/backend/routes.ts`,
- * o mesmo módulo usado pelo modo demo do frontend. Os dados ficam em memória e voltam ao seed
+ * o mesmo módulo usado pelo modo navegador do frontend. Os dados ficam em memória e voltam ao seed
  * quando o servidor reinicia (ou em POST /demo/reset).
  */
 export function createApp({ jwtSecret, staticDir }: AppOptions) {

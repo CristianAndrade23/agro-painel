@@ -1,6 +1,6 @@
 /**
- * Modo demo (padrão): a API roda dentro do navegador, sem servidor.
- * Usado pelo `npm start` e pela demo publicada no GitHub Pages.
+ * Modo navegador (padrão do `npm start`): a API roda dentro do próprio navegador,
+ * então o painel funciona sem subir o backend.
  */
 export const environment = {
   useMockApi: true,

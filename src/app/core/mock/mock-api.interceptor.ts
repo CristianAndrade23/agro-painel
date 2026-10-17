@@ -12,7 +12,7 @@ import { appSettings } from '../config';
 import { SignInRequest, UserInfo } from '../models';
 
 /**
- * API mock do modo demo: atende as chamadas no próprio navegador usando as mesmas
+ * API mock do modo navegador: atende as chamadas no próprio navegador usando as mesmas
  * regras de negócio do servidor (`core/backend/routes.ts`). Aqui ficam só as partes
  * específicas do navegador: token de demonstração, latência simulada e persistência
  * no localStorage.
