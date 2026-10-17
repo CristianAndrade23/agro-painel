@@ -1,0 +1,161 @@
+<header class="page-header">
+  <div>
+    <h1>Grupos de comparação</h1>
+    <p class="text-muted">Agrupe lavouras da mesma cultura e safra para comparar custos e produtividade.</p>
+  </div>
+  <button type="button" class="btn btn--primary" (click)="openCreate()">
+    <app-icon name="plus" />
+    Criar grupo
+  </button>
+</header>
+
+<section class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" [size]="16" />
+      <input
+        class="input"
+        type="search"
+        placeholder="Buscar grupo, cultura ou ano…"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </label>
+  </div>
+
+  @if (groups.error()) {
+    <div class="empty-state">
+      Erro ao carregar os grupos.
+      <button type="button" class="link" (click)="groups.reload()">Tentar novamente</button>
+    </div>
+  } @else if (!groups.hasValue()) {
+    <div class="empty-state">Carregando grupos…</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Cultura</th>
+            <th>Safra</th>
+            <th>Lavouras</th>
+            <th class="center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (group of pageItems(); track group.id) {
+            <tr>
+              <td class="strong mono">{{ group.name }}</td>
+              <td><span class="badge">{{ group.cultureType }}</span></td>
+              <td>{{ group.plantingYear }}/{{ group.harvestYear }}</td>
+              <td>
+                <button type="button" class="link" (click)="managing.set(group)">
+                  <app-icon name="link" [size]="14" />
+                  Gerenciar lavouras
+                </button>
+              </td>
+              <td class="center nowrap">
+                <button
+                  type="button"
+                  class="btn-icon"
+                  title="Editar grupo"
+                  [attr.aria-label]="'Editar ' + group.name"
+                  (click)="openEdit(group)"
+                >
+                  <app-icon name="pencil" [size]="16" />
+                </button>
+                <button
+                  type="button"
+                  class="btn-icon btn-icon--danger"
+                  title="Excluir grupo"
+                  [attr.aria-label]="'Excluir ' + group.name"
+                  (click)="deleting.set(group)"
+                >
+                  <app-icon name="trash" [size]="16" />
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="empty-state">Nenhum grupo encontrado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-paginator [total]="filtered().length" [pageSize]="pageSize" [(page)]="page" />
+  }
+</section>
+
+<!-- Criar / editar -->
+<app-modal
+  [title]="editor()?.mode === 'edit' ? 'Editar grupo' : 'Criar grupo de comparação'"
+  [open]="editor() !== null"
+  (openChange)="closeEditor($event)"
+>
+  @if (editor(); as e) {
+    @if (e.mode === 'edit' && !inspected.hasValue()) {
+      <p class="text-muted">Carregando…</p>
+    } @else {
+      <app-group-form
+        [group]="e.mode === 'edit' ? e.group : null"
+        [existingNames]="names()"
+        [locked]="e.mode === 'edit' && hasFarmings()"
+        [serverError]="serverError()"
+        (submitted)="save($event)"
+      />
+    }
+  }
+  <div modal-footer>
+    <button type="button" class="btn btn--ghost" (click)="editor.set(null)">Cancelar</button>
+    <button type="submit" form="group-form" class="btn btn--primary" [disabled]="saving()">
+      {{ saving() ? 'Salvando…' : editor()?.mode === 'edit' ? 'Salvar alterações' : 'Criar grupo' }}
+    </button>
+  </div>
+</app-modal>
+
+<!-- Lavouras do grupo -->
+<app-modal
+  size="lg"
+  [title]="'Lavouras do grupo ' + (managing()?.name ?? '')"
+  [open]="managing() !== null"
+  (openChange)="!$event && managing.set(null)"
+>
+  @if (managing(); as group) {
+    <app-group-farmings [group]="group" />
+  }
+  <div modal-footer>
+    <button type="button" class="btn btn--primary" (click)="managing.set(null)">Concluir</button>
+  </div>
+</app-modal>
+
+<!-- Excluir -->
+<app-modal
+  size="sm"
+  title="Excluir grupo"
+  [open]="deleting() !== null"
+  (openChange)="!$event && deleting.set(null)"
+>
+  @if (deleting(); as group) {
+    @if (!inspected.hasValue()) {
+      <p class="text-muted">Verificando lavouras vinculadas…</p>
+    } @else if (hasFarmings()) {
+      <div class="alert alert--warning">
+        <app-icon name="alert" />
+        Para excluir <strong>{{ group.name }}</strong>, remova antes as lavouras vinculadas a ele.
+      </div>
+    } @else {
+      <p>Deseja mesmo excluir o grupo <strong>{{ group.name }}</strong>?</p>
+    }
+  }
+  <div modal-footer>
+    <button type="button" class="btn btn--ghost" (click)="deleting.set(null)">
+      {{ hasFarmings() ? 'Fechar' : 'Cancelar' }}
+    </button>
+    @if (inspected.hasValue() && !hasFarmings()) {
+      <button type="button" class="btn btn--danger" [disabled]="saving()" (click)="confirmDelete()">
+        {{ saving() ? 'Excluindo…' : 'Excluir' }}
+      </button>
+    }
+  </div>
+</app-modal>

@@ -1,0 +1,66 @@
+<header class="page-header">
+  <div>
+    <h1>Análise de lavouras</h1>
+    <p class="text-muted">
+      Revise os custos das lavouras de cada produtor e defina quais estão aptas a entrar nos grupos de
+      comparação.
+    </p>
+  </div>
+</header>
+
+<section class="card picker">
+  <label class="field">
+    <span class="field__label">Buscar produtor</span>
+    <app-autocomplete
+      [items]="available()"
+      [label]="producerLabel"
+      [disabled]="!producers.hasValue()"
+      [placeholder]="producers.hasValue() ? 'Digite o nome do produtor…' : 'Carregando produtores…'"
+      emptyText="Nenhum produtor encontrado"
+      (selected)="pick($event)"
+    />
+  </label>
+
+  @if (picked().length) {
+    <div class="chips" role="list" aria-label="Produtores selecionados">
+      @for (producer of picked(); track producer.id) {
+        <span class="chip" role="listitem" [class.is-active]="producer.id === activeId()">
+          <button type="button" class="chip__label" (click)="activeId.set(producer.id)">
+            {{ fullName(producer) }}
+          </button>
+          <button
+            type="button"
+            class="chip__remove"
+            [attr.aria-label]="'Remover ' + fullName(producer)"
+            (click)="remove(producer)"
+          >
+            <app-icon name="x" [size]="14" />
+          </button>
+        </span>
+      }
+    </div>
+  }
+</section>
+
+@if (activeId() === undefined) {
+  <div class="empty-state card">
+    <app-icon name="sprout" [size]="32" />
+    <p>Selecione um produtor para exibir suas lavouras.</p>
+  </div>
+} @else if (farmings.error()) {
+  <div class="alert alert--danger">
+    <app-icon name="alert" />
+    Não foi possível carregar as lavouras.
+    <button type="button" class="link" (click)="farmings.reload()">Tentar novamente</button>
+  </div>
+} @else if (farmings.value(); as data) {
+  @if (data.ableFarmings.length + data.unableFarmings.length === 0) {
+    <div class="empty-state card">
+      <p>{{ fullName(data.producer) }} não possui lavouras cadastradas. Selecione outro produtor.</p>
+    </div>
+  } @else {
+    <app-producer-farmings [data]="data" (changed)="farmings.reload()" />
+  }
+} @else {
+  <div class="empty-state card">Carregando lavouras…</div>
+}

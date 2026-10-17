@@ -1,0 +1,78 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Testes
+        run: npx ng test --watch=false
+
+      - name: Build (GitHub Pages)
+        run: npx ng build --base-href "/${{ github.event.repository.name }}/"
+
+      # Fallback de SPA: o GitHub Pages serve 404.html para rotas desconhecidas.
+      - run: cp dist/agro-painel/browser/index.html dist/agro-painel/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/agro-painel/browser
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Testes E2E (Cypress)
+        uses: cypress-io/github-action@v6
+        with:
+          start: npm start
+          wait-on: http://localhost:4200
+          wait-on-timeout: 120
+          browser: chrome
+
+      - name: Screenshots das falhas
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: [build, e2e]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

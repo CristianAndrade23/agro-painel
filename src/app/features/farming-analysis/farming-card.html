@@ -1,0 +1,108 @@
+@let f = farming();
+<article class="farming" [class.is-selected]="selected()">
+  <div class="farming__summary">
+    @if (selectable()) {
+      <input
+        type="checkbox"
+        class="checkbox"
+        [checked]="selected()"
+        (change)="selected.set($any($event.target).checked)"
+        [attr.aria-label]="'Selecionar ' + f.name"
+      />
+    }
+    <div class="farming__title">
+      <strong>{{ f.name }}</strong>
+      <span class="text-muted">
+        {{ f.cultureType }} · safra {{ f.plantingYear }}/{{ f.harvestYear }} · {{ f.plantedArea | number }} ha
+      </span>
+    </div>
+    <button
+      type="button"
+      class="btn btn--ghost btn--sm"
+      [attr.aria-expanded]="expanded()"
+      (click)="expanded.set(!expanded())"
+    >
+      Detalhes
+      <app-icon name="chevron-down" [size]="16" [class.is-rotated]="expanded()" />
+    </button>
+  </div>
+
+  @if (expanded()) {
+    @let fig = figures();
+    @let t = totals();
+    <div class="farming__details">
+      <div class="segmented" role="group" aria-label="Cenário">
+        <button type="button" [class.is-active]="scenario() === 'estimated'" (click)="scenario.set('estimated')">
+          Estimado
+        </button>
+        <button type="button" [class.is-active]="scenario() === 'effective'" (click)="scenario.set('effective')">
+          Efetivo
+        </button>
+      </div>
+
+      <dl class="metrics">
+        <div>
+          <dt>Produção</dt>
+          <dd>{{ fig.production | number }} sc</dd>
+        </div>
+        <div>
+          <dt>Produtividade</dt>
+          <dd>{{ fig.productivity | number }} sc/ha</dd>
+        </div>
+        <div>
+          <dt>Preço de venda</dt>
+          <dd>{{ fig.salePrice | currency: 'BRL' }}/sc</dd>
+        </div>
+        <div>
+          <dt>Receita</dt>
+          <dd>{{ t.revenue | currency: 'BRL' : 'symbol' : '1.0-0' }}</dd>
+        </div>
+        <div>
+          <dt>Margem</dt>
+          <dd [class.text-danger]="t.margin < 0" [class.text-success]="t.margin >= 0">
+            {{ t.margin | currency: 'BRL' : 'symbol' : '1.0-0' }}
+          </dd>
+        </div>
+      </dl>
+
+      <div class="table-wrap">
+        <table class="table table--compact">
+          <thead>
+            <tr>
+              <th>Custo</th>
+              <th class="num">Valor</th>
+              <th class="num">R$/ha</th>
+              <th class="num">R$/sc</th>
+            </tr>
+          </thead>
+          @for (group of costGroups(); track group.label) {
+            <tbody>
+              <tr class="table__group">
+                <th scope="rowgroup">{{ group.label }}</th>
+                <td class="num">{{ group.total | currency: 'BRL' }}</td>
+                <td class="num">{{ group.perHectare | currency: 'BRL' }}</td>
+                <td class="num">{{ group.perBag | currency: 'BRL' }}</td>
+              </tr>
+              @for (cost of group.items; track cost.id) {
+                <tr>
+                  <td class="indent">{{ cost.costName }}</td>
+                  <td class="num">{{ cost.valueCost | currency: 'BRL' }}</td>
+                  <td class="num">{{ cost.costPerHectare | currency: 'BRL' }}</td>
+                  <td class="num">{{ cost.costPerBags | currency: 'BRL' }}</td>
+                </tr>
+              }
+            </tbody>
+          }
+          <tfoot>
+            <tr>
+              <th>Custo total</th>
+              <td class="num">{{ t.total | currency: 'BRL' }}</td>
+              <td class="num">{{ t.perHectare | currency: 'BRL' }}</td>
+              <td class="num">{{ t.perBag | currency: 'BRL' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  }
+</article>

@@ -1,0 +1,65 @@
+<div class="shell" [class.menu-open]="menuOpen()">
+  <header class="topbar">
+    <button
+      type="button"
+      class="btn-icon btn-icon--light"
+      aria-label="Abrir menu"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <app-icon [name]="menuOpen() ? 'x' : 'menu'" [size]="22" />
+    </button>
+    <div class="brand">
+      <span class="brand__mark"><app-icon name="sprout" /></span>
+      <span class="brand__name">AgroPainel</span>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="brand sidebar__brand">
+      <span class="brand__mark"><app-icon name="sprout" [size]="20" /></span>
+      <span class="brand__name">AgroPainel</span>
+    </div>
+
+    <nav class="sidebar__nav" aria-label="Menu principal">
+      @for (group of nav; track group.section) {
+        <span class="sidebar__section">{{ group.section }}</span>
+        @for (item of group.items; track item.path) {
+          <a
+            class="sidebar__link"
+            [routerLink]="item.path"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+            (click)="menuOpen.set(false)"
+          >
+            <app-icon [name]="item.icon" />
+            {{ item.label }}
+          </a>
+        }
+      }
+    </nav>
+
+    <div class="sidebar__footer">
+      <div class="sidebar__user">
+        <span class="avatar">{{ (session.user()?.clientName ?? 'A').charAt(0) }}</span>
+        <span>{{ session.user()?.clientName ?? 'Administrador' }}</span>
+      </div>
+      @if (isMock) {
+        <button type="button" class="sidebar__link" (click)="resetDemoData()">
+          <app-icon name="refresh" />
+          Restaurar dados demo
+        </button>
+      }
+      <button type="button" class="sidebar__link" (click)="session.logout()">
+        <app-icon name="logout" />
+        Sair
+      </button>
+    </div>
+  </aside>
+
+  <div class="backdrop" (click)="menuOpen.set(false)"></div>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

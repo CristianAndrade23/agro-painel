@@ -1,0 +1,117 @@
+<header class="page-header">
+  <div>
+    <h1>Usuários</h1>
+    <p class="text-muted">Produtores com plano contratado e status da assinatura.</p>
+  </div>
+  <button type="button" class="btn btn--primary" disabled title="Cadastro disponível apenas no backend real">
+    <app-icon name="plus" />
+    Novo usuário
+  </button>
+</header>
+
+<section class="card">
+  <div class="toolbar">
+    <label class="search">
+      <app-icon name="search" [size]="16" />
+      <input
+        class="input"
+        type="search"
+        placeholder="Buscar por nome ou e-mail…"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </label>
+    <div class="segmented" role="group" aria-label="Filtrar por status">
+      @for (option of ['todos', 'ativos', 'inativos']; track option) {
+        <button
+          type="button"
+          [class.is-active]="statusFilter() === option"
+          (click)="statusFilter.set($any(option))"
+        >
+          {{ option }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (plans.error()) {
+    <div class="empty-state">
+      Não foi possível carregar a lista.
+      <button type="button" class="link" (click)="plans.reload()">Tentar novamente</button>
+    </div>
+  } @else if (!plans.hasValue()) {
+    <div class="empty-state">Carregando usuários…</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Plano</th>
+            <th>Início</th>
+            <th>Fim</th>
+            <th class="num">Hectares</th>
+            <th class="num">Valor pago</th>
+            <th class="center">Ativo</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (plan of pageItems(); track plan.id) {
+            <tr>
+              <td class="strong">{{ fullName(plan.producer) }}</td>
+              <td class="text-muted">{{ plan.email }}</td>
+              <td><span class="badge">{{ plan.plan.name }}</span></td>
+              <td>{{ formatDate(plan.startDate) }}</td>
+              <td>{{ formatDate(plan.endDate) }}</td>
+              <td class="num">{{ plan.quantityHectare | number }}</td>
+              <td class="num">{{ plan.amount | currency: 'BRL' }}</td>
+              <td class="center">
+                <button
+                  type="button"
+                  role="switch"
+                  class="switch"
+                  [attr.aria-checked]="plan.isActive"
+                  [attr.aria-label]="(plan.isActive ? 'Desativar' : 'Ativar') + ' plano de ' + fullName(plan.producer)"
+                  (click)="confirming.set(plan)"
+                ></button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="empty-state">Nenhum usuário encontrado.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-paginator [total]="filtered().length" [pageSize]="pageSize" [(page)]="page" />
+  }
+</section>
+
+<app-modal
+  size="sm"
+  [title]="confirming()?.isActive ? 'Desativar plano' : 'Ativar plano'"
+  [open]="confirming() !== null"
+  (openChange)="setConfirmOpen($event)"
+>
+  @if (confirming(); as plan) {
+    <p>
+      Deseja <strong>{{ plan.isActive ? 'desativar' : 'ativar' }}</strong> o plano de
+      <strong>{{ fullName(plan.producer) }}</strong>?
+    </p>
+  }
+  <div modal-footer>
+    <button type="button" class="btn btn--ghost" (click)="confirming.set(null)">Cancelar</button>
+    <button
+      type="button"
+      class="btn"
+      [class.btn--danger]="confirming()?.isActive"
+      [class.btn--primary]="!confirming()?.isActive"
+      [disabled]="saving()"
+      (click)="toggleActive()"
+    >
+      {{ saving() ? 'Salvando…' : confirming()?.isActive ? 'Desativar' : 'Ativar' }}
+    </button>
+  </div>
+</app-modal>

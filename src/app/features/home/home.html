@@ -1,0 +1,49 @@
+<header class="page-header">
+  <div>
+    <h1>Olá, {{ session.user()?.clientName ?? 'administrador' }}.</h1>
+    <p class="text-muted">Visão geral das assinaturas e das safras em comparação.</p>
+  </div>
+</header>
+
+@if (data.isLoading()) {
+  <div class="kpi-grid">
+    @for (i of [1, 2, 3, 4, 5]; track i) {
+      <div class="kpi card skeleton"></div>
+    }
+  </div>
+} @else if (data.error()) {
+  <div class="alert alert--danger">
+    <app-icon name="alert" />
+    Não foi possível carregar os indicadores.
+    <button type="button" class="link" (click)="data.reload()">Tentar novamente</button>
+  </div>
+} @else {
+  <div class="kpi-grid">
+    @for (kpi of kpis(); track kpi.label) {
+      <a class="kpi card" [class]="'kpi card kpi--' + kpi.tone" [routerLink]="kpi.link">
+        <span class="kpi__icon"><app-icon [name]="kpi.icon" [size]="20" /></span>
+        <span class="kpi__label">{{ kpi.label }}</span>
+        <strong class="kpi__value">{{ kpi.value }}</strong>
+        <span class="kpi__hint">{{ kpi.hint }}</span>
+      </a>
+    }
+  </div>
+}
+
+<section class="card shortcuts">
+  <h2>Por onde começar</h2>
+  <ol>
+    <li>
+      Em <a routerLink="/painel/lavouras">Análise de lavouras</a>, busque um produtor e habilite as
+      lavouras que podem entrar na comparação.
+    </li>
+    <li>
+      Em <a routerLink="/painel/grupos">Grupos de comparação</a>, crie um grupo para uma cultura e safra e
+      vincule as lavouras aptas.
+    </li>
+    <li>
+      Acompanhe as assinaturas em <a routerLink="/painel/usuarios">Usuários</a> e renove os vencimentos em
+      <a routerLink="/painel/planos-a-vencer">Planos a vencer</a>.
+    </li>
+  </ol>
+</section>

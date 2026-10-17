@@ -1,0 +1,148 @@
+.shell {
+  --sidebar-width: 248px;
+  min-height: 100dvh;
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 14px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  z-index: 20;
+}
+
+.sidebar__brand {
+  padding: 4px 10px 18px;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar__section {
+  margin: 14px 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sidebar-muted);
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sidebar__link:hover {
+  background: var(--sidebar-hover);
+}
+
+.sidebar__link.is-active {
+  background: var(--sidebar-active);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sidebar__link.is-active app-icon {
+  color: var(--accent);
+}
+
+.sidebar__footer {
+  border-top: 1px solid var(--sidebar-hover);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 10px;
+  font-weight: 600;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+}
+
+.content {
+  margin-left: var(--sidebar-width);
+  padding: 32px clamp(16px, 4vw, 40px) 48px;
+  max-width: 1280px;
+}
+
+.topbar,
+.backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+  }
+
+  /* visibility evita que o menu fechado receba foco pelo teclado. */
+  .sidebar {
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 0.2s ease,
+      visibility 0.2s;
+  }
+
+  .menu-open .sidebar {
+    transform: none;
+    visibility: visible;
+  }
+
+  .menu-open .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    background: rgb(0 0 0 / 0.4);
+  }
+
+  .content {
+    margin-left: 0;
+    padding-top: 20px;
+  }
+}

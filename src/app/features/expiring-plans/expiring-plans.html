@@ -1,0 +1,140 @@
+<header class="page-header">
+  <div>
+    <h1>Planos a vencer</h1>
+    <p class="text-muted">Acompanhe os vencimentos e renove as assinaturas dos produtores.</p>
+  </div>
+</header>
+
+@if (counts().critical > 0) {
+  <div class="alert alert--warning">
+    <app-icon name="alert" />
+    {{ counts().critical }} {{ counts().critical === 1 ? 'plano vence' : 'planos vencem' }} nos próximos 7 dias.
+  </div>
+}
+
+<section class="card">
+  <div class="toolbar">
+    <div class="tabs" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="tab() === 'a-vencer'"
+        [class.is-active]="tab() === 'a-vencer'"
+        (click)="tab.set('a-vencer')"
+      >
+        A vencer <span class="tabs__count">{{ counts()['a-vencer'] }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="tab() === 'vencidos'"
+        [class.is-active]="tab() === 'vencidos'"
+        (click)="tab.set('vencidos')"
+      >
+        Vencidos <span class="tabs__count">{{ counts().vencidos }}</span>
+      </button>
+    </div>
+    <label class="search">
+      <app-icon name="search" [size]="16" />
+      <input
+        class="input"
+        type="search"
+        placeholder="Buscar produtor…"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </label>
+  </div>
+
+  @if (data.error()) {
+    <div class="empty-state">
+      Erro ao buscar os planos.
+      <button type="button" class="link" (click)="data.reload()">Tentar novamente</button>
+    </div>
+  } @else if (!data.hasValue()) {
+    <div class="empty-state">Carregando planos…</div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Produtor</th>
+            <th>Plano</th>
+            <th>Vencimento</th>
+            <th>Situação</th>
+            <th class="center">Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pageItems(); track row.plan.id) {
+            <tr>
+              <td class="strong">{{ row.name }}</td>
+              <td><span class="badge">{{ row.plan.plan.name }}</span></td>
+              <td>{{ formatDate(row.plan.endDate) }}</td>
+              <td>
+                <span class="badge" [class]="'badge badge--' + row.urgency">{{ row.dueLabel }}</span>
+              </td>
+              <td class="center">
+                <button
+                  type="button"
+                  class="btn-icon"
+                  title="Alterar vencimento"
+                  [attr.aria-label]="'Alterar vencimento de ' + row.name"
+                  (click)="openEditor(row.plan)"
+                >
+                  <app-icon name="pencil" [size]="16" />
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="empty-state">Nenhum plano nesta lista.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-paginator [total]="filtered().length" [pageSize]="pageSize" [(page)]="page" />
+  }
+</section>
+
+<app-modal
+  size="sm"
+  title="Alterar vencimento"
+  [open]="editing() !== null"
+  (openChange)="setEditorOpen($event)"
+>
+  @if (editing(); as plan) {
+    <div class="stack">
+      <dl class="details">
+        <dt>Produtor</dt>
+        <dd>{{ plan.producer.name }} {{ plan.producer.lastName }}</dd>
+        <dt>Plano</dt>
+        <dd>{{ plan.plan.name }} · início em {{ formatDate(plan.startDate) }}</dd>
+        <dt>Vencimento atual</dt>
+        <dd>{{ formatDate(plan.endDate) }}</dd>
+      </dl>
+      <label class="field">
+        <span class="field__label">Novo vencimento</span>
+        <input
+          class="input"
+          type="date"
+          [class.is-invalid]="dateError()"
+          [value]="newEndDate()"
+          (input)="newEndDate.set($any($event.target).value)"
+          (keydown.enter)="save()"
+        />
+        @if (dateError(); as error) {
+          <span class="field__error">{{ error }}</span>
+        }
+      </label>
+      <button type="button" class="link align-start" (click)="extendOneYear()">Renovar por +1 ano</button>
+    </div>
+  }
+  <div modal-footer>
+    <button type="button" class="btn btn--ghost" (click)="editing.set(null)">Cancelar</button>
+    <button type="button" class="btn btn--primary" [disabled]="saving() || dateError()" (click)="save()">
+      {{ saving() ? 'Salvando…' : 'Salvar' }}
+    </button>
+  </div>
+</app-modal>

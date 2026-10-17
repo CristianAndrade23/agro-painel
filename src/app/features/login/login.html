@@ -1,0 +1,53 @@
+<main class="login">
+  <section class="login__card card">
+    <div class="brand brand--dark">
+      <span class="brand__mark"><app-icon name="sprout" [size]="22" /></span>
+      <span class="brand__name">AgroPainel</span>
+    </div>
+    <p class="login__subtitle">Painel administrativo de planos, lavouras e grupos de comparação.</p>
+
+    <form class="stack" (submit)="submit($event)" novalidate>
+      <label class="field">
+        <span class="field__label">Usuário</span>
+        <input
+          class="input"
+          type="text"
+          name="username"
+          autocomplete="username"
+          [value]="username()"
+          (input)="username.set($any($event.target).value)"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Senha</span>
+        <input
+          class="input"
+          type="password"
+          name="password"
+          autocomplete="current-password"
+          [value]="password()"
+          (input)="password.set($any($event.target).value)"
+        />
+      </label>
+
+      @if (error(); as message) {
+        <div class="alert alert--danger" role="alert">
+          <app-icon name="alert" />
+          {{ message }}
+        </div>
+      }
+
+      <button class="btn btn--primary btn--block" type="submit" [disabled]="!canSubmit()">
+        {{ loading() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <div class="login__demo">
+      <span>
+        Demonstração: <code>{{ demo.username }}</code> / <code>{{ demo.password }}</code>
+      </span>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="fillDemo()">Preencher</button>
+    </div>
+  </section>
+</main>
