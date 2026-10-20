@@ -10,6 +10,7 @@
     "start:api": "ng serve --configuration api",
     "api": "npm --prefix backend run dev",
     "build": "ng build",
+    "build:demo": "ng build --configuration demo",
     "serve:prod": "npm run build && npm --prefix backend start",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

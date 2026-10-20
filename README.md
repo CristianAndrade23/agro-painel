@@ -2,6 +2,10 @@
 
 Painel administrativo para uma plataforma de gestão agrícola: controle de assinaturas dos produtores, análise de custos das lavouras e montagem de **grupos de comparação de safra**.
 
+**[Abrir a demo](https://cristianandrade23.github.io/agro-painel/)** · usuário `admin`, senha `admin123`
+
+A demo roda no GitHub Pages com a API dentro do navegador (as mesmas regras do backend Express), então abre na hora. Os dados ficam no seu navegador e podem ser restaurados pelo menu lateral.
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 > Projeto de portfólio. Nasceu como o painel interno de um produto real (Angular 8) e foi **reescrito em Angular 22** com componentes standalone, signals e change detection zoneless, mais um **backend em Express**. A marca, os dados e o backend originais foram removidos, e todos os dados são fictícios.
@@ -35,7 +39,7 @@ Painel administrativo para uma plataforma de gestão agrícola: controle de assi
 - **CSS próprio** com design tokens e **tema escuro** automático (`prefers-color-scheme`).
 - **Testes unitários com Vitest**, o runner padrão do Angular 22.
 - **Testes end-to-end com Cypress**: 37 cenários cobrindo login, guards, as cinco telas, CRUD, validações e layout mobile. Rodam **nos dois modos**: contra a API no navegador e contra o servidor Express real. Os dados esperados vêm do mesmo seed da API, então nenhum nome fica fixo no código dos testes.
-- **CI com GitHub Actions**: build e testes unitários, de API e E2E a cada push e pull request.
+- **CI/CD com GitHub Actions**: build e testes unitários, de API e E2E a cada push e pull request, e deploy da demo no GitHub Pages.
 
 ### Estrutura
 

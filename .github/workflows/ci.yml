@@ -1,4 +1,4 @@
-name: CI
+name: CI / Deploy
 
 on:
   push:
@@ -20,9 +20,9 @@ jobs:
     env:
       CYPRESS_INSTALL_BINARY: 0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -44,6 +44,17 @@ jobs:
       - name: Build de produção
         run: npx ng build
 
+      - name: Build da demo estática (GitHub Pages)
+        run: |
+          npx ng build --configuration demo --output-path dist/pages --base-href "/${{ github.event.repository.name }}/"
+          # Fallback de SPA: o GitHub Pages serve 404.html para rotas desconhecidas.
+          cp dist/pages/browser/index.html dist/pages/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: dist/pages/browser
+
   e2e:
     name: E2E (Cypress, modo ${{ matrix.mode }})
     runs-on: ubuntu-latest
@@ -56,9 +67,9 @@ jobs:
           - mode: servidor
             script: e2e:server
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -67,7 +78,7 @@ jobs:
             backend/package-lock.json
 
       - name: Cache do binário do Cypress
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -79,8 +90,23 @@ jobs:
 
       - name: Screenshots das falhas
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-screenshots-${{ matrix.mode }}
           path: cypress/screenshots
           if-no-files-found: ignore
+
+  deploy:
+    name: Deploy da demo (GitHub Pages)
+    if: github.event_name != 'pull_request'
+    needs: [build, e2e]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
